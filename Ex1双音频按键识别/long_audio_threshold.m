@@ -1,0 +1,55 @@
+
+function long_audio_threshold(file)
+%     [long_data, Fs_long] = audioread(['./13701191098.wav']);
+    [long_data, Fs_long] = audioread([file]);
+    long_data_length = length(long_data);
+    interval = 1000;
+    i = 1;
+
+    fft_t = 0;
+    my_g_t = 0;
+    auto_g_t = 0;
+    fft_res = [];
+    my_g_res = [];
+    auto_g_res = [];
+%     fft_threshold = 1; 此处阈值为1时，会导致识别出错，具体见实验报告
+    fft_threshold = 2.5;
+    auto_g_threshold = 1;
+    my_g_threshold = 1;
+    while i < long_data_length - interval
+        [my_g_time, my_g_number, my_g_amp1, my_g_amp2] = mycode_goertzel_analyse(long_data(i:i + interval), Fs_long);
+        if exist('goertzel')
+            [auto_g_time, auto_g_number, auto_g_amp1, auto_g_amp2] = auto_goertzel_analyse(long_data(i:i + interval), Fs_long);
+        end
+        [fft_time, fft_number, fft_amp1, fft_amp2] = fft_analyse(long_data(i:i + interval), Fs_long);
+%         amp1
+%         amp2
+        
+        if fft_amp1 > fft_threshold && fft_amp2 > fft_threshold
+            fft_res = [fft_res, string(fft_number)];
+        end
+        
+        if my_g_amp1 > my_g_threshold && my_g_amp2 > my_g_threshold
+            my_g_res = [my_g_res, string(my_g_number)];
+        end
+        if exist('goertzel')
+            if auto_g_amp1 > auto_g_threshold && auto_g_amp2 > auto_g_threshold
+                auto_g_res = [auto_g_res, string(auto_g_number)];
+            end
+        end
+        fft_t = fft_t + fft_time;
+        my_g_t = my_g_t + my_g_time;
+        auto_g_t = auto_g_t + auto_g_time;
+        i = i + interval;
+    end
+    fft_res
+    my_g_res
+    if exist('goertzel')
+        auto_g_res
+    end
+    fft_t
+    my_g_t
+    if exist('goertzel')
+        auto_g_t
+    end
+end
